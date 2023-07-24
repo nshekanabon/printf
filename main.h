@@ -4,9 +4,9 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <stdlib.h>
-
+/*
 #define _INT_MIN
- (1 << (sizeof(int) * 8 - 1))
+ (1 << (sizeof(int) * 8 - 1));*/
 
 	int _printf(const char *format, ...);
 	int _putchar(char c);
