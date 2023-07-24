@@ -1,103 +1,66 @@
-#include "main.h"
- #include <stdio.h>
- /**
-  * _printf - Prints to the standar output like regular printf
-  * @format: The string to be printed adn its format specifiers
-  *
-  * Return: Length of printed string
-  */
- int _printf(const char *format, ...)
- {
-         va_list ls_args;
-         char flag;
-         int i = 0, len = 0;
+#include "main.h"
 
-         va_start(ls_args, format);
-         if (!format)
-                 return (-1);
-         while (format[i])
-         {
-                 if (format[i] != '%')
-                         len += _putchar(format[i]);
-                 else
-                 {
-                         i++;
-                         if (!format[i])
-                                 return (-1);
-                         if (format[i] == '+' || format[i] == ' ' || format[i] == '#')
-                         {
-                                 flag = format[i];
-                                 i++;
-                                 len += _flag_handler(ls_args, flag, format[i]);
-                         }
-                         else
-                                 len += _spec_handler(ls_args, format[i]);
-                 }
-                 i++;
-         }
+void print_buffer(char buffer[], int *buff_ind);
 
-         va_end(ls_args);
+/**
+ * _printf - Printf function
+ * @format: format.
+ * Return: Printed chars.
+ */
+int _printf(const char *format, ...)
+{
+	int i, printed = 0, printed_chars = 0;
+	int flags, width, precision, size, buff_ind = 0;
+	va_list list;
+	char buffer[BUFF_SIZE];
 
-         return (len);
- }
+	if (format == NULL)
+		return (-1);
 
- /**
-  * _spec_handler - handles the specifier passed to _printf
-  *
-  * @ls_args: List of variadic arguments
-  * @spec: the specifier after %
-  *
-  * Return: length of handle argument
-  */
- int _spec_handler (va_list ls_args, char spec)
- {
-         int len = 0;
+	va_start(list, format);
 
-         if (spec == 'c')
-                 len += _putchar(va_arg(ls_args, int));
-         else if (spec == 's')
-                 len += _putstr(va_arg(ls_args, char *));
-         else if (spec == 'd' || spec == 'i')
-                 len += _putint(va_arg(ls_args, int));
-         else if (spec == 'b')
-                 len += _putbit(va_arg(ls_args, unsigned int));
-         else if (spec == '%')
-                 len += _putchar('%');
-         else if (spec == 'u')
-                 len += _putuint(va_arg(ls_args, unsigned int));
-         else if (spec == 'o')
-                 len += _putoct(va_arg(ls_args, unsigned int));
-         else if (spec == 'x' || spec == 'X')
-                 len += _puthex(va_arg(ls_args, int), spec);
-         else if (spec == 'S')
-                 len += _putnospec(va_arg(ls_args, char *));
-         /else if (spec == 'p')/
-         /*        len += _putpointer(va_arg(ls_args, void ));/
-         else
-                 len += _printf("%%%c", spec);
+	for (i = 0; format && format[i] != '\0'; i++)
+	{
+		if (format[i] != '%')
+		{
+			buffer[buff_ind++] = format[i];
+			if (buff_ind == BUFF_SIZE)
+				print_buffer(buffer, &buff_ind);
+			/* write(1, &format[i], 1);*/
+			printed_chars++;
+		}
+		else
+		{
+			print_buffer(buffer, &buff_ind);
+			flags = get_flags(format, &i);
+			width = get_width(format, &i, list);
+			precision = get_precision(format, &i, list);
+			size = get_size(format, &i);
+			++i;
+			printed = handle_print(format, &i, list, buffer,
+				flags, width, precision, size);
+			if (printed == -1)
+				return (-1);
+			printed_chars += printed;
+		}
+	}
 
-         return (len);
- }
+	print_buffer(buffer, &buff_ind);
 
- /**
-  * _flag_handler - handles the specifier passed to _printf
-  *
-  * @ls_args: List of variadic arguments
-  * @spec: the specifier
-  * @base: base
-  * Return: length of handle argument
-  */
- int _flag_handler(va_list ls_args, char spec, char base)
- {
-         int len = 0;
+	va_end(list);
 
-         if (spec == '+')
-                 len += _putsign(va_arg(ls_args, int), base);
-         else if (spec == ' ')
+	return (printed_chars);
+}
 
-                 len += _putspace(va_arg(ls_args, int), base);
-         else if (spec == '#')
-                 len += _puthash(va_arg(ls_args, unsigned int), base);
+/**
+ * print_buffer - Prints the contents of the buffer if it exist
+ * @buffer: Array of chars
+ * @buff_ind: Index at which to add next char, represents the length.
+ */
+void print_buffer(char buffer[], int *buff_ind)
+{
+	if (*buff_ind > 0)
+		write(1, &buffer[0], *buff_ind);
 
-         return (len);
- }
+	*buff_ind = 0;
+}
